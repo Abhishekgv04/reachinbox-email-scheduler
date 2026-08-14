@@ -37,15 +37,21 @@ export const env = {
   port: getNumberEnv("PORT", 5000),
 
   redis: {
-    host:
-      process.env.REDIS_HOST ||
-      "localhost",
+  host:
+    process.env.REDIS_HOST ||
+    "localhost",
 
-    port: getNumberEnv(
-      "REDIS_PORT",
-      6379
-    ),
-  },
+  port: getNumberEnv(
+    "REDIS_PORT",
+    6379
+  ),
+
+  password:
+    process.env.REDIS_PASSWORD || "",
+
+  tls:
+    process.env.REDIS_TLS === "true",
+},
 
   worker: {
     concurrency: getNumberEnv(

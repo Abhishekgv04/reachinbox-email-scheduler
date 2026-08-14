@@ -4,6 +4,19 @@ import { env } from "./env.js";
 export const redisConnection = new Redis({
   host: env.redis.host,
   port: env.redis.port,
+
+  ...(env.redis.password
+    ? {
+        password: env.redis.password,
+      }
+    : {}),
+
+  ...(env.redis.tls
+    ? {
+        tls: {},
+      }
+    : {}),
+
   maxRetriesPerRequest: null,
 });
 
@@ -12,5 +25,8 @@ redisConnection.on("connect", () => {
 });
 
 redisConnection.on("error", (error: Error) => {
-  console.error("Redis connection error:", error.message);
+  console.error(
+    "Redis connection error:",
+    error.message
+  );
 });
