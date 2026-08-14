@@ -1,0 +1,35 @@
+{
+  "name": "reachinbox-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ReachInbox full-stack email job scheduler backend",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "worker": "tsx src/worker.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "bullmq": "^6.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "google-auth-library": "^11.0.2",
+    "ioredis": "^6.0.0",
+    "nodemailer": "^9.0.5",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.21.0",
+    "prisma": "^7.9.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
