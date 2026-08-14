@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Send, Plus, X } from "lucide-react";
+import { ArrowLeft, Send, Plus, X, Upload } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Layout from "../components/Layout";
@@ -12,8 +12,7 @@ function CreateCampaign() {
 
   const { user } = useAuth();
 
-  const [senders, setSenders] =
-    useState([]);
+  const [senders, setSenders] = useState([]);
 
   const [loadingSenders, setLoadingSenders] =
     useState(true);
@@ -32,6 +31,9 @@ function CreateCampaign() {
 
   const [recipients, setRecipients] =
     useState([]);
+
+  const [uploadMessage, setUploadMessage] =
+    useState("");
 
   const [startAt, setStartAt] =
     useState("");
@@ -129,6 +131,121 @@ function CreateCampaign() {
   }
 
   // ========================================
+  // CSV / TXT UPLOAD
+  // ========================================
+
+  function handleFileUpload(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const extension =
+      file.name
+        .substring(
+          file.name.lastIndexOf(".")
+        )
+        .toLowerCase();
+
+    if (
+      extension !== ".csv" &&
+      extension !== ".txt"
+    ) {
+      setError(
+        "Please upload a CSV or TXT file."
+      );
+
+      setUploadMessage("");
+
+      event.target.value = "";
+
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const text =
+        String(e.target?.result || "");
+
+      /*
+       * Extract email addresses from the
+       * uploaded CSV/TXT content.
+       *
+       * This works even when the CSV contains
+       * headers or other columns.
+       */
+      const emails =
+        text
+          .match(
+            /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi
+          ) || [];
+
+      const validEmails =
+        emails
+          .map((email) =>
+            email
+              .trim()
+              .toLowerCase()
+          )
+          .filter(isValidEmail);
+
+      const uniqueEmails =
+        [...new Set(validEmails)];
+
+      if (uniqueEmails.length === 0) {
+        setError(
+          "No valid email addresses found in the uploaded file."
+        );
+
+        setUploadMessage("");
+
+        return;
+      }
+
+      /*
+       * Merge uploaded emails with existing
+       * manually-added recipients.
+       *
+       * Duplicate emails are automatically removed.
+       */
+      setRecipients((prev) => [
+        ...new Set([
+          ...prev,
+          ...uniqueEmails,
+        ]),
+      ]);
+
+      setUploadMessage(
+        `${uniqueEmails.length} email address${
+          uniqueEmails.length === 1
+            ? ""
+            : "es"
+        } detected from ${file.name}`
+      );
+
+      setError("");
+    };
+
+    reader.onerror = () => {
+      setError(
+        "Unable to read the uploaded file."
+      );
+
+      setUploadMessage("");
+    };
+
+    reader.readAsText(file);
+
+    /*
+     * Allows the user to select the same
+     * file again later.
+     */
+    event.target.value = "";
+  }
+
+  // ========================================
   // REMOVE RECIPIENT
   // ========================================
 
@@ -150,6 +267,7 @@ function CreateCampaign() {
   ) {
     if (event.key === "Enter") {
       event.preventDefault();
+
       addRecipient();
     }
   }
@@ -260,7 +378,6 @@ function CreateCampaign() {
           `/campaigns/${campaign.id}`
         );
       }, 700);
-
     } catch (error) {
       console.error(
         "Create campaign error:",
@@ -271,7 +388,6 @@ function CreateCampaign() {
         error.response?.data?.message ||
           "Failed to create campaign."
       );
-
     } finally {
       setLoading(false);
     }
@@ -455,8 +571,58 @@ function CreateCampaign() {
               </h2>
 
               <p className="mt-1 text-xs text-zinc-500">
-                Add the email addresses that should receive this campaign.
+                Add email addresses manually or upload a CSV/TXT lead file.
               </p>
+
+              {/* CSV / TXT UPLOAD */}
+
+              <div className="mt-5 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-5">
+
+                <div className="flex items-start gap-3">
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-zinc-200">
+                    <Upload
+                      size={18}
+                      className="text-zinc-600"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+
+                    <p className="text-sm font-semibold text-zinc-800">
+                      Upload recipient list
+                    </p>
+
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Upload a CSV or TXT file containing email addresses.
+                    </p>
+
+                    <label className="mt-3 inline-flex cursor-pointer items-center rounded-lg bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-zinc-800">
+                      Choose File
+
+                      <input
+                        type="file"
+                        accept=".csv,.txt"
+                        onChange={
+                          handleFileUpload
+                        }
+                        className="hidden"
+                      />
+                    </label>
+
+                  </div>
+
+                </div>
+
+                {uploadMessage && (
+                  <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                    ✓ {uploadMessage}
+                  </div>
+                )}
+
+              </div>
+
+              {/* MANUAL RECIPIENT */}
 
               <div className="mt-5 flex gap-2">
 
@@ -487,6 +653,8 @@ function CreateCampaign() {
                 </button>
 
               </div>
+
+              {/* RECIPIENT CHIPS */}
 
               {recipients.length >
                 0 && (
@@ -524,13 +692,18 @@ function CreateCampaign() {
                 </div>
               )}
 
+              {/* RECIPIENT COUNT */}
+
               <p className="mt-3 text-xs text-zinc-400">
+
                 {recipients.length}{" "}
+
                 {recipients.length ===
                 1
                   ? "recipient"
                   : "recipients"}{" "}
                 added
+
               </p>
 
             </div>
