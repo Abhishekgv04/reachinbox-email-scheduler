@@ -40,7 +40,7 @@ export async function testSmtpConnection(
     },
 
     tls: {
-      rejectUnauthorized: true,
+      rejectUnauthorized: false,
       servername: input.smtpHost,
     },
 
