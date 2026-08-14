@@ -8,7 +8,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "type-check": "tsc --noEmit",
-    "worker": "tsx src/worker.ts"
+    "worker": "tsx src/worker.ts",
+    "start": "npx prisma migrate deploy && (node dist/server.js & node dist/worker.js)"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
